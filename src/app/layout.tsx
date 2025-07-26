@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "Venus Total Beauty",
     images: [
       {
-        url: "/ogp.jpg",
+        url: "/logo.png",
         width: 1200,
         height: 630,
       },
