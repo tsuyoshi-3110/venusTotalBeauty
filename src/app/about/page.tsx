@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "当店の思い｜Venus Total Beauty（ネイルサロン）",
     description:
       "美と癒しを大切に、指先から笑顔をお届けする Venus Total Beauty のこだわりをご紹介します。",
-    url: "https://venusTotalBeaty-homepage.vercel.app/about",
+    url: "https://venus-total-beauty.shop/about",
     siteName: "Venus Total Beauty",
     images: [
       {

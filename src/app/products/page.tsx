@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: "メニュー一覧｜Venus Total Beauty（ネイルサロン）",
     description:
       "ネイルサロン Venus Total Beauty の施術メニュー紹介ページ。写真付きで掲載し、編集や並び替えも可能です。",
-    url: "https://venusTotalBeaty-homepage.vercel.app/products", // 実際のURLに置き換え可能
+    url: "https://venus-total-beauty.shop/products", // 実際のURLに置き換え可能
     siteName: "Venus Total Beauty",
     images: [
       {

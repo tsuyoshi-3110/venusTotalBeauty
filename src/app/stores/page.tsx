@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: "店舗一覧｜Venus Total Beauty（ネイルサロン）",
     description:
       "ネイルサロン Venus Total Beauty の複数店舗表示ページ。所在地・営業時間・紹介文を掲載できます。",
-    url: "https://venusTotalBeaty-homepage.vercel.app/stores", // 実際のURLに変更可
+    url: "https://venus-total-beauty.shop/stores", // 実際のURLに変更可
     siteName: "Venus Total Beauty",
     images: [
       {
@@ -33,9 +33,8 @@ export default function StoresPage() {
           Venus Total Beauty ─ 店舗一覧
         </h1>
         <p className="leading-relaxed text-white/80">
-          <strong>Venus Total Beauty</strong> は
-          <strong>東淀川区淡路</strong> を拠点に展開する
-          ネイル＆ビューティーサロンです。
+          <strong>Venus Total Beauty</strong> は<strong>東淀川区淡路</strong>{" "}
+          を拠点に展開する ネイル＆ビューティーサロンです。
           お客様のライフスタイルに寄り添う、
           <br className="hidden lg:block" />
           丁寧で高品質なサービスをご提供しています。

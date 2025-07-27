@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: "Venus Total Beauty｜東淀川区淡路のネイルサロン",
     description:
       "丁寧なケアと高品質な仕上がりが自慢のネイルサロン。大阪市東淀川区淡路で営業中。",
-    url: "https://venusTotalBeaty-homepage.vercel.app/",
+    url: "https://venus-total-beauty.shop/",
     siteName: "Venus Total Beauty",
     images: [
       {
@@ -87,7 +87,7 @@ export default function RootLayout({
               streetAddress: "淡路4-18-13", // 実際の番地があれば修正してください
             },
             telephone: "06-1234-5678", // 実際の番号に変更してください
-            url: "https://venusTotalBeaty-homepage.vercel.app/",
+            url: "https://venus-total-beauty.shop/",
           })}
         </Script>
       </body>
