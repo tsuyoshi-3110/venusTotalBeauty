@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://venusTotalBeaty.shop
+
+# Sitemaps
+Sitemap: https://venusTotalBeaty.shop/sitemap.xml
