@@ -2,7 +2,7 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
   // ここを本番で使いたいドメインに変更
-  siteUrl: "https://venusTotalBeaty.shop",
+  siteUrl: "https://www.venus-total-beauty.shop",
 
   // robots.txt も要るなら true
   generateRobotsTxt: true,

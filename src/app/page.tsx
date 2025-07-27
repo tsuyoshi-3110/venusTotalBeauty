@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "Venus Total Beauty｜大阪市東淀川区淡路のネイルサロン",
     description:
       "Venus Total Beautyは、指先から美しさを引き出すネイルサロン。お客様一人ひとりに合わせたケアをご提供しています。",
-    url: "https://venusTotalBeaty.shop/",
+    url: "https://www.venus-total-beauty.shop/",
     siteName: "Venus Total Beauty",
     images: [
       {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     type: "website",
   },
-  alternates: { canonical: "https://venusTotalBeaty.shop/" },
+  alternates: { canonical: "https://www.venus-total-beauty.shop/" },
 };
 
 export default function HomePage() {
@@ -48,7 +48,8 @@ export default function HomePage() {
 
         <p className="max-w-3xl mx-auto text-center leading-relaxed">
           大阪市東淀川区淡路にあるネイルサロン
-          <strong>「Venus Total Beauty」</strong>では、落ち着いた空間と丁寧な施術で、
+          <strong>「Venus Total Beauty」</strong>
+          では、落ち着いた空間と丁寧な施術で、
           お客様一人ひとりの魅力を引き出します。
           初めての方も安心してご利用いただけるサロンです。
         </p>
@@ -67,7 +68,7 @@ export default function HomePage() {
                 "@type": "PostalAddress",
                 addressLocality: "大阪市東淀川区淡路",
               },
-              url: "https://venusTotalBeaty.shop/",
+              url: "https://www.venus-total-beauty.shop/",
               telephone: "06-1234-5678",
               description: "ネイルサロン・ハンドケア・フットケア",
             },

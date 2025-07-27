@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://venusTotalBeaty.shop
+Host: https://www.venus-total-beauty.shop
 
 # Sitemaps
-Sitemap: https://venusTotalBeaty.shop/sitemap.xml
+Sitemap: https://www.venus-total-beauty.shop/sitemap.xml

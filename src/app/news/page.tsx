@@ -9,13 +9,13 @@ export const metadata: Metadata = {
     title: "お知らせ｜Venus Total Beauty（ネイルサロン）",
     description:
       "ネイルサロン Venus Total Beauty のお知らせ。定休日やお得な情報を随時更新しています。",
-    url: "https://venusTotalBeaty.shop/news",
+    url: "https://www.venus-total-beauty.shop/news",
     siteName: "Venus Total Beauty",
     images: [{ url: "/ogp-news.jpg", width: 1200, height: 630 }],
     locale: "ja_JP",
     type: "website",
   },
-  alternates: { canonical: "https://venusTotalBeaty.shop/news" },
+  alternates: { canonical: "https://www.venus-total-beauty.shop/news" },
 };
 
 export default function NewsPage() {
