@@ -124,6 +124,13 @@ export default function Header({ className = "" }: HeaderProps) {
                 Work
               </Link>
               <Link
+                href="/staffs"
+                onClick={() => setOpen(false)}
+                className="text-lg text-white"
+              >
+                staffs
+              </Link>
+              <Link
                 href="/menu"
                 onClick={() => setOpen(false)}
                 className="text-lg text-white"
