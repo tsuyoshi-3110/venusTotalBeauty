@@ -16,19 +16,48 @@ import clsx from "clsx";
 
 import { useThemeGradient } from "@/lib/useThemeGradient";
 import { useHeaderLogoUrl } from "../hooks/useHeaderLogoUrl";
-import { ExternalLink } from "lucide-react";
+
 
 type HeaderProps = {
   className?: string;
 };
 
-const SNS = [
+
+
+const SNS: {
+  name: string;
+  href: string;
+  icon: React.FC;
+}[] = [
+
   {
-    name: "ホットペッパービューティー",
+    name: "LINE",
+    href: "https://lin.ee/KaFE6fA",
+    icon: () => (
+      <Image
+        src="/line-logo.png"
+        alt="LINE"
+        width={32}
+        height={32}
+        className="object-contain"
+      />
+    ),
+  },
+  {
+    name: "HotPepper",
     href: "https://beauty.hotpepper.jp/kr/slnH000546712/",
-    icon: ExternalLink,
+    icon: () => (
+      <Image
+        src="/hotpepper-logo.png"
+        alt="HotPepper"
+        width={32}
+        height={32}
+        className="object-contain"
+      />
+    ),
   },
 ];
+
 
 export default function Header({ className = "" }: HeaderProps) {
   /* ▼ 追加：Sheet の開閉を管理するステート */
@@ -67,7 +96,7 @@ export default function Header({ className = "" }: HeaderProps) {
         VENUS Total Beauty
       </Link>
 
-      <nav className="flex gap-4 ml-auto mr-6">
+      <nav className="flex gap-2 ml-auto mr-2">
         {SNS.map(({ name, href, icon: Icon }) => (
           <a
             key={name}
@@ -77,7 +106,7 @@ export default function Header({ className = "" }: HeaderProps) {
             aria-label={name}
             className="text-white hover:text-pink-600 transition"
           >
-            <Icon size={26} strokeWidth={1.8} />
+            <Icon />
           </a>
         ))}
       </nav>
@@ -151,7 +180,7 @@ export default function Header({ className = "" }: HeaderProps) {
               >
                 Notice
               </Link>
-              <Link href="" className="hover:underline text-white">
+              <Link href="https://lin.ee/KaFE6fA" className="hover:underline text-white">
                 Contact
               </Link>
             </div>
