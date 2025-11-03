@@ -125,7 +125,7 @@ const SITE_OVERRIDES: SiteOverrides = {
     facebook: "",
   },
   // ユーザー指定に合わせた公開URL（末尾スラッシュは自動で削除）
-  baseUrl: "https://venusTotalBeaty-homepage.vercel.app/",
+  baseUrl: "https://venus-total-beauty.shop/",
 };
 
 /* =========================
