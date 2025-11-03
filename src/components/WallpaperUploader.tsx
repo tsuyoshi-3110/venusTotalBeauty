@@ -6,12 +6,11 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
 import { db, storage, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
 export default function WallpaperUploader() {
   const [file, setFile] = useState<File | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
-  const SITE_KEY = "venusTotalBeaty";
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => setIsAdmin(!!user));

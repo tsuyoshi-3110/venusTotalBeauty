@@ -7,10 +7,8 @@ export default function ThemeSelector({
   currentTheme: ThemeKey;
   onChange: (theme: ThemeKey) => void;
 }) {
-
-
   return (
-     <div className="grid grid-cols-3 gap-4">
+    <div className="flex flex-wrap gap-4">
       {(Object.keys(THEMES) as ThemeKey[]).map((key) => (
         <button
           key={key}

@@ -4,6 +4,8 @@ import { getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AsYouType } from "libphonenumber-js";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
 type Props = {
   onClose: () => void;
@@ -12,11 +14,11 @@ type Props = {
 
 export default function ForgotEmail({ onClose, onEmailFound }: Props) {
   const [phone, setPhone] = useState("");
+  const [rawPhone, setRawPhone] = useState(""); // 数字のみ保持
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const SITE_KEY = "venusTotalBeaty";
 
   const handleSearch = async () => {
     setLoading(true);
@@ -32,7 +34,9 @@ export default function ForgotEmail({ onClose, onEmailFound }: Props) {
       }
 
       const data = snap.data();
-      if (data.ownerPhone && data.ownerPhone === phone) {
+      const normalizedPhone = rawPhone.replace(/-/g, ""); // ハイフン除去
+
+      if (data.ownerPhone && data.ownerPhone.replace(/-/g, "") === normalizedPhone) {
         const foundEmail = data.ownerEmail ?? "（メールアドレスが未登録です）";
         setEmail(foundEmail);
 
@@ -50,6 +54,14 @@ export default function ForgotEmail({ onClose, onEmailFound }: Props) {
     }
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value.replace(/\D/g, ""); // 数字のみ抽出
+    const formatter = new AsYouType("JP");
+    const formatted = formatter.input(input);
+    setRawPhone(input);
+    setPhone(formatted);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white w-full max-w-md rounded-lg p-6 shadow-lg space-y-4">
@@ -62,9 +74,9 @@ export default function ForgotEmail({ onClose, onEmailFound }: Props) {
 
         <Input
           type="tel"
-          placeholder="電話番号（例: 09012345678）"
+          placeholder="例: 090-1234-5678"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={handlePhoneChange}
         />
 
         <Button

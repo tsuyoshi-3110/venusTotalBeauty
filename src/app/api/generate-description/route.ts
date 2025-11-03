@@ -6,29 +6,36 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: NextRequest) {
-  const { title } = await req.json();
+  const { title, keywords } = await req.json();
 
   if (!title) {
     return NextResponse.json({ error: "タイトルが必要です" }, { status: 400 });
   }
 
+  // キーワードがある場合に備える（必須ではない）
+  const keywordText =
+    Array.isArray(keywords) && keywords.length > 0
+      ? `キーワード: ${keywords.join("、")} を参考に`
+      : "";
+
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content:
-        "あなたは商品説明を日本語で親しみやすく簡潔に書くプロのコピーライターです。価格・メーカー名・産地の情報は一切含めず、150文字以内で仕上げてください。",
+      content: `あなたは、商品・サービス・作品・施工実績などを親しみやすく簡潔に紹介するプロのコピーライターです。
+紹介文は、どのような対象でも自然に読めるように仕上げてください。
+価格・メーカー名・産地などの具体的な数値情報や宣伝文句は使わず、150文字以内にまとめてください。`,
     },
     {
       role: "user",
-      content: `商品タイトル: ${title}\n→ 150文字以内で親しみやすい紹介文を生成してください。価格・メーカー名・産地は書かないでください。`,
+      content: `タイトル: ${title}\n${keywordText}紹介文を150文字以内で作成してください。`,
     },
   ];
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-5-chat-latest",
     messages,
     temperature: 0.8,
-    max_tokens: 300, // 150文字に相当するトークン数（英語より多めに）
+    max_tokens: 300,
   });
 
   const description = completion.choices[0].message.content?.trim();

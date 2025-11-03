@@ -16,6 +16,7 @@ export default function CrepeLoader() {
           alt="Crepe Base"
           layout="fill"
           objectFit="contain"
+          unoptimized
         />
 
         {/* 回転するトンボ */}
@@ -31,6 +32,7 @@ export default function CrepeLoader() {
               alt="Crepe T-Bar"
               width={50}
               height={50}
+              unoptimized
             />
           </div>
         </motion.div>

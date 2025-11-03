@@ -1,207 +1,597 @@
+// components/AboutClient.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  DocumentData,
+} from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+  deleteObject,
+} from "firebase/storage";
 import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import CardSpinner from "./CardSpinner";
 import { useThemeGradient } from "@/lib/useThemeGradient";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
+import { useUILang } from "@/lib/atoms/uiLangAtom";
+import { LANGS as TARGET_LANGS } from "@/lib/langs";
 
+// ✅ 共通ファイル形式ユーティリティ
+import {
+  IMAGE_MIME_TYPES,
+  VIDEO_MIME_TYPES,
+  extFromMime,
+} from "@/lib/fileTypes";
+
+// ✅ 共通 BusyOverlay
+import { BusyOverlay } from "./BusyOverlay";
+import { UILang } from "@/lib/langsState";
+
+/* ───────── 定数 ───────── */
+const STORAGE_PATH = `sitePages/${SITE_KEY}/about`;
+const MAX_VIDEO_SEC = 60;
+
+/* ───────── 型 ───────── */
+type MediaType = "image" | "video" | undefined;
+type LangKey = (typeof TARGET_LANGS)[number]["key"] | "ja";
+
+type AboutDoc = {
+  text?: string; // 互換
+  base?: { text?: string };
+  t?: Array<{ lang: string; text?: string }>;
+  mediaUrl?: string | null;
+  mediaType?: MediaType | null;
+  fileName?: string | null;
+};
+
+/* ───────── ユーティリティ ───────── */
+const omitUndefined = <T extends Record<string, any>>(obj: T) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as T;
+
+function readBase(d: AboutDoc | null | undefined): string {
+  return (d?.base?.text ?? d?.text ?? "").toString();
+}
+function pickLocalized(
+  d: AboutDoc | null | undefined,
+  uiLang: LangKey
+): string {
+  const base = readBase(d);
+  if (uiLang === "ja" || !d?.t) return base;
+  return (d.t.find((x) => x.lang === uiLang)?.text ?? base).toString();
+}
+async function translateOne(body: string, target: LangKey): Promise<string> {
+  if (!body.trim()) return "";
+  const res = await fetch("/api/translate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: "", body, target }),
+  });
+  if (!res.ok) throw new Error("translate API error");
+  const data = (await res.json()) as { body?: string };
+  return (data.body ?? "").toString();
+}
+async function buildAllTranslations(baseText: string): Promise<AboutDoc["t"]> {
+  const keys = TARGET_LANGS.map((l) => l.key as LangKey);
+  const out = await Promise.all(
+    keys.map(async (k) => ({ lang: k, text: await translateOne(baseText, k) }))
+  );
+  return out;
+}
+
+const ABOUT_T: Record<UILang, { heading: string }> = {
+  ja: { heading: "私たちの思い" },
+  en: { heading: "About us" },
+  zh: { heading: "关于我们" },
+  "zh-TW": { heading: "關於我們" },
+  ko: { heading: "회사 소개" },
+  fr: { heading: "À propos" },
+  es: { heading: "Sobre nosotros" },
+  de: { heading: "Über uns" },
+  pt: { heading: "Sobre nós" },
+  it: { heading: "Chi siamo" },
+  ru: { heading: "О нас" },
+  th: { heading: "เกี่ยวกับเรา" },
+  vi: { heading: "Về chúng tôi" },
+  id: { heading: "Tentang kami" },
+  hi: { heading: "हमारे बारे में" },
+  ar: { heading: "نبذة عنا" },
+};
+
+/* ───────── 本体 ───────── */
 export default function AboutClient() {
-  const [content, setContent] = useState<string>("");
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [editing, setEditing] = useState<boolean>(false);
-  const [draft, setDraft] = useState<string>("");
-  const [submitFlag, setSubmitFlag] = useState(false);
-
-  const [keywords, setKeywords] = useState(["", "", ""]);
-  const [loading, setLoading] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-
-  const nonEmptyKeywords = keywords.filter((k) => k.trim() !== "");
-
+  const { uiLang } = useUILang();
   const gradient = useThemeGradient();
-  /* ここだけ変えれば他サイトにも流用できます */
-  const SITE_KEY = "venusTotalBeaty";
+  const docRef = useMemo(
+    () => doc(db, "sitePages", SITE_KEY, "pages", "about"),
+    []
+  );
 
-  /* 4 セグメント = ドキュメント参照
-   sitePages / {siteId} / pages / about */
-  const docRef = doc(db, "sitePages", SITE_KEY, "pages", "about");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingDoc, setLoadingDoc] = useState(true);
+  const [docData, setDocData] = useState<AboutDoc | null>(null);
 
+  const T = ABOUT_T[uiLang] ?? ABOUT_T.ja;
+
+  const displayText = useMemo(
+    () => pickLocalized(docData, uiLang),
+    [docData, uiLang]
+  );
+
+  const [editing, setEditing] = useState(false);
+  const [draftText, setDraftText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const [previewURL, setPreviewURL] = useState<string | null>(null);
+  const [draftFile, setDraftFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  /* 認証 */
+  useEffect(() => onAuthStateChanged(auth, (u) => setIsAdmin(!!u)), []);
+
+  /* 初期取得 */
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => setIsAdmin(!!user));
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    getDoc(docRef).then((snap) => {
-      if (snap.exists()) {
-        const text = snap.data().text;
-        setContent(text);
-        setDraft(text);
+    (async () => {
+      try {
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const raw = snap.data() as DocumentData;
+          const parsed: AboutDoc = {
+            text: raw.text,
+            base: raw.base,
+            t: Array.isArray(raw.t) ? raw.t : undefined,
+            mediaUrl: raw.mediaUrl ?? null,
+            mediaType: raw.mediaType ?? null,
+            fileName: raw.fileName ?? null,
+          };
+          setDocData(parsed);
+          setDraftText(readBase(parsed));
+        } else {
+          setDocData({ base: { text: "" }, t: [] });
+          setDraftText("");
+        }
+      } finally {
+        setLoadingDoc(false);
       }
-    });
-  }, []);
+    })();
+  }, [docRef]);
 
-  const handleSave = async () => {
-    setSubmitFlag(true);
-    await setDoc(docRef, { text: draft });
-    setContent(draft);
-    setEditing(false);
-    setKeywords(["", "", ""]);
-    alert("保存しました！");
-    setSubmitFlag(false);
+  /* ファイル選択 */
+  const handleSelectFile = (file: File) => {
+    const okType = [...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES].includes(
+      file.type
+    );
+    if (!okType) {
+      alert("対応していない形式です");
+      return;
+    }
+
+    if (VIDEO_MIME_TYPES.includes(file.type)) {
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.onloadedmetadata = () => {
+        URL.revokeObjectURL(v.src);
+        if ((v.duration || 0) > MAX_VIDEO_SEC) {
+          alert(`動画は${MAX_VIDEO_SEC}秒以内にしてください`);
+          return;
+        }
+        setDraftFile(file);
+        setPreviewURL(URL.createObjectURL(file));
+      };
+      v.onerror = () => alert("動画の読み込みに失敗しました");
+      v.src = URL.createObjectURL(file);
+    } else {
+      setDraftFile(file);
+      setPreviewURL(URL.createObjectURL(file));
+    }
   };
 
+  /* 保存（常に全言語上書き） */
+  const handleSave = useCallback(async () => {
+    if (!docData) return;
+    setSaving(true);
+    try {
+      // メディア差し替え
+      let nextMediaUrl: string | null | undefined = docData.mediaUrl ?? null;
+      let nextMediaType: MediaType | null = docData.mediaType ?? null;
+      let nextFileName: string | null | undefined = docData.fileName ?? null;
+
+      if (draftFile) {
+        // 旧ファイル（URL）を消す試み（失敗しても続行）
+        if (docData.mediaUrl) {
+          try {
+            await deleteObject(ref(getStorage(), docData.mediaUrl));
+          } catch {}
+        }
+
+        const ext = extFromMime(draftFile.type);
+        const storageRef = ref(
+          getStorage(),
+          `${STORAGE_PATH}/${Date.now()}.${ext}`
+        );
+        const task = uploadBytesResumable(storageRef, draftFile, {
+          contentType: draftFile.type,
+        });
+
+        setUploadProgress(0);
+
+        nextMediaUrl = await new Promise<string>((resolve, reject) => {
+          task.on(
+            "state_changed",
+            (snap) =>
+              setUploadProgress(
+                Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
+              ),
+            reject,
+            async () => resolve(await getDownloadURL(task.snapshot.ref))
+          );
+        });
+
+        nextMediaType = VIDEO_MIME_TYPES.includes(draftFile.type)
+          ? "video"
+          : "image";
+        nextFileName = draftFile.name;
+      }
+
+      // ★ 全言語を必ず再翻訳
+      const baseText = draftText;
+      const nextT = await buildAllTranslations(baseText);
+
+      // Firestore へ undefined を書かない
+      const payload = omitUndefined<AboutDoc>({
+        base: { text: baseText },
+        t: nextT,
+        text: baseText, // 後方互換
+        mediaUrl: nextMediaUrl ?? null,
+        mediaType: nextMediaType ?? null,
+        fileName: nextFileName ?? null,
+      });
+
+      await setDoc(docRef, payload, { merge: true });
+
+      setDocData((prev) => ({
+        ...(prev ?? {}),
+        ...payload,
+      }));
+      setDraftFile(null);
+      setPreviewURL(null);
+      setEditing(false);
+      alert("保存しました！");
+    } catch (e) {
+      console.error(e);
+      alert("保存に失敗しました");
+    } finally {
+      setSaving(false);
+      setUploadProgress(null);
+    }
+  }, [docData, draftText, draftFile, docRef]);
+
   if (!gradient) return <CardSpinner />;
+  if (loadingDoc) return <CardSpinner />;
 
   return (
-    <main className="max-w-3xl mx-auto ">
-      <div className=" bg-white/50 p-5 ml-5 mr-5 rounded-lg shadow-2xs">
-        <div className="bg-transparent p-4 rounded  leading-relaxed whitespace-pre-wrap bg-transparentt ">
-          {content || "ただいま準備中です。"}
-        </div>
-        {isAdmin && !editing && (
-          <Button onClick={() => setEditing(true)} className="mt-4 bg-blue-500">
-            編集する
-          </Button>
+    <main className="relative max-w-3xl mx-auto px-4 py-4 ">
+      {/* ✅ 共通 BusyOverlay（進捗＆保存中） */}
+      <BusyOverlay uploadingPercent={uploadProgress} saving={saving} />
+
+      <h1 className="text-3xl font-semibold text-white text-outline mb-8">
+        {T.heading}
+      </h1>
+
+      {/* 表示カード */}
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl border border-white/30 bg-white/30 backdrop-blur-md shadow-lg overflow-hidden"
+      >
+        {docData?.mediaUrl && (
+          <div className="relative w-full pt-[100%] bg-black/20 overflow-hidden">
+            {docData.mediaType === "image" ? (
+              <Image
+                src={docData.mediaUrl}
+                alt="about-media"
+                fill
+                sizes="(max-width:768px) 100vw, 768px"
+                className="object-cover"
+                priority
+                unoptimized
+              />
+            ) : (
+              <video
+                src={docData.mediaUrl}
+                className="absolute inset-0 w-full h-full object-cover"
+                muted
+                autoPlay
+                loop
+                playsInline
+              />
+            )}
+          </div>
         )}
-      </div>
+        <div className="p-5">
+          <motion.div
+            key={displayText}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="leading-relaxed whitespace-pre-wrap prose prose-neutral max-w-none text-white text-outline"
+          >
+            {displayText || "ただいま準備中です。"}
+          </motion.div>
 
-      <div className="max-w-3xl mx-auto p-4 space-y-6 ">
-        {/* <section>
-          <h3 className="text-xl font-semibold text-white/80 ">
-            メディア掲載実績
-          </h3>
-          <ul className="mt-2 space-y-1 list-disc list-inside">
-            <li>
-              <a
-                href="https://okeiko-kidz.com/shimosinjyo-11/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline hover:text-blue-800"
-              >
-                おけいこキッズ｜取材記事
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://higashiyodogawaku.goguynet.jp/2024/11/06/venusTotalBeaty/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline hover:text-blue-800"
-              >
-                号外NET 東淀川区｜取材記事
-              </a>
-            </li>
-          </ul>
-        </section> */}
-      </div>
-
-      {isAdmin && editing && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl space-y-4 shadow-xl relative">
-            <h2 className="text-xl font-bold text-center">内容を編集</h2>
-
-            <Textarea
-              rows={10}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              className="bg-transparentt border text-black placeholder-gray-400"
-              placeholder="ここに文章を入力..."
-            />
-
-            <div className="mt-4 space-y-2">
+          {isAdmin && !editing && (
+            <motion.div
+              className="mt-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
               <Button
-                className="bg-purple-500 w-full"
-                onClick={() => setShowAIModal(true)}
-              >
-                AIで作成
-              </Button>
-            </div>
-
-            <div className="flex justify-center gap-2">
-              <Button
-                className="bg-green-500"
-                onClick={handleSave}
-                disabled={submitFlag}
-              >
-                {submitFlag ? "保存中..." : "保存"}
-              </Button>
-              <Button
-                className="bg-gray-300"
-                variant="outline"
                 onClick={() => {
-                  setDraft(content);
-                  setEditing(false);
-                  setKeywords(["", "", ""]);
+                  setDraftText(readBase(docData));
+                  setEditing(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 transition-colors shadow"
+              >
+                編集する
+              </Button>
+            </motion.div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* 編集モーダル */}
+      <AnimatePresence>
+        {isAdmin && editing && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-black/50"
+              aria-hidden
+              onClick={() => setEditing(false)}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white/30 shadow-2xl backdrop-blur-lg p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              {/* テキスト（伸びない・スクロール可能） */}
+              <div className="space-y-2">
+                <div className="text-sm text-gray-700">編集してください。</div>
+                <Textarea
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value)}
+                  className="min-h-40 max-h-[60vh] resize-y overflow-auto bg-white/70 border-gray-200 text-black placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  placeholder="ここに文章を入力..."
+                />
+                <div className="text-right text-xs text-gray-600">
+                  文字数：{draftText.length.toLocaleString()}
+                </div>
+              </div>
+
+              {/* メディア */}
+              <section className="space-y-2">
+                <label className="font-medium">
+                  画像 / 動画（{MAX_VIDEO_SEC}秒以内）
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={saving}
+                  >
+                    {draftFile ? "別のファイルを選ぶ" : "画像/動画を選択"}
+                  </Button>
+                  {(draftFile || previewURL) && (
+                    <span className="text-xs text-gray-600 truncate max-w-[12rem]">
+                      {draftFile?.name}
+                    </span>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={[...IMAGE_MIME_TYPES, ...VIDEO_MIME_TYPES].join(",")}
+                  onChange={(e) =>
+                    e.target.files?.[0] && handleSelectFile(e.target.files[0])
+                  }
+                  className="hidden"
+                />
+
+                {docData?.mediaUrl && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        // URL指定の削除は失敗することもあるため、失敗は握りつぶす
+                        await deleteObject(
+                          ref(getStorage(), docData.mediaUrl!)
+                        ).catch(() => {});
+                        await updateDoc(docRef, {
+                          mediaUrl: null,
+                          mediaType: null,
+                          fileName: null,
+                        });
+                        setDocData({
+                          ...docData,
+                          mediaUrl: null,
+                          mediaType: null,
+                          fileName: null,
+                        });
+                        setDraftFile(null);
+                        setPreviewURL(null);
+                      } catch {
+                        alert("削除に失敗しました");
+                      }
+                    }}
+                  >
+                    メディアを削除
+                  </Button>
+                )}
+              </section>
+
+              {/* アクション */}
+              <div className="flex flex-col gap-2">
+                <AIWriter onApply={(text) => setDraftText(text)} />
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? "保存中…" : "保存"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditing(false);
+                    setDraftFile(null);
+                    setPreviewURL(null);
+                  }}
+                >
+                  キャンセル
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}
+
+/* ================== AI生成モーダル ================== */
+function AIWriter({ onApply }: { onApply: (text: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [k1, setK1] = useState("");
+  const [k2, setK2] = useState("");
+  const [k3, setK3] = useState("");
+  const [loading, setLoading] = useState(false);
+  const nonEmpty = [k1, k2, k3].map((s) => s.trim()).filter(Boolean);
+
+  return (
+    <>
+      <Button
+        className="bg-indigo-600 hover:bg-indigo-700"
+        onClick={() => setOpen(true)}
+      >
+        AIで作成
+      </Button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setOpen(false)}
+            />
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              className="relative w-full max-w-md mx-4 rounded-2xl bg-white p-6 shadow-2xl space-y-4"
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            >
+              <h2 className="text-xl font-bold text-center">AIで文章を生成</h2>
+              <p className="text-sm text-gray-500 text-center">
+                最低1個以上のキーワードを入力してください
+              </p>
+              <div className="flex flex-col gap-2">
+                <input
+                  className="border p-2 rounded"
+                  placeholder="キーワード1"
+                  value={k1}
+                  onChange={(e) => setK1(e.target.value)}
+                />
+                <input
+                  className="border p-2 rounded"
+                  placeholder="キーワード2"
+                  value={k2}
+                  onChange={(e) => setK2(e.target.value)}
+                />
+                <input
+                  className="border p-2 rounded"
+                  placeholder="キーワード3"
+                  value={k3}
+                  onChange={(e) => setK3(e.target.value)}
+                />
+              </div>
+              <div className="text-xs text-gray-500 min-h-5">
+                {nonEmpty.length > 0 && (
+                  <>
+                    送信キーワード：<b>{nonEmpty.join(" ／ ")}</b>
+                  </>
+                )}
+              </div>
+              <Button
+                className="bg-indigo-600 w-full disabled:opacity-50 hover:bg-indigo-700"
+                disabled={nonEmpty.length === 0 || loading}
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const res = await fetch("/api/generate-about", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ keywords: nonEmpty }),
+                    });
+                    const data = await res.json();
+                    const text = String(data?.text ?? "");
+                    if (!text.trim()) alert("生成結果が空でした");
+                    else {
+                      onApply(text);
+                      setOpen(false);
+                    }
+                  } catch {
+                    alert("生成に失敗しました");
+                  } finally {
+                    setLoading(false);
+                    setK1("");
+                    setK2("");
+                    setK3("");
+                  }
                 }}
               >
-                キャンセル
+                {loading ? "生成中…" : "作成"}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showAIModal && (
-        <div className="fixed inset-0 bg-black/50 z-[999] flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl relative">
-            <h2 className="text-xl font-bold text-center">AIで文章を生成</h2>
-            <label>・最低1個以上必要。</label>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {keywords.map((word, i) => (
-                <input
-                  key={i}
-                  type="text"
-                  className="border p-2 rounded text-black"
-                  placeholder={`キーワード${i + 1}`}
-                  value={word}
-                  onChange={(e) => {
-                    const newKeywords = [...keywords];
-                    newKeywords[i] = e.target.value;
-                    setKeywords(newKeywords);
-                  }}
-                />
-              ))}
-            </div>
-
-            <Button
-              className="bg-indigo-600 w-full disabled:opacity-50"
-              disabled={nonEmptyKeywords.length === 0 || loading}
-              onClick={async () => {
-                setLoading(true);
-                try {
-                  const res = await fetch("/api/generate-about", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ keywords: nonEmptyKeywords }),
-                  });
-                  const data = await res.json();
-                  setDraft(data.text);
-                  setShowAIModal(false); // 成功後閉じる
-                } catch {
-                  alert("生成に失敗しました");
-                } finally {
-                  setLoading(false);
-                  setKeywords(["", "", ""]);
-                }
-              }}
-            >
-              {loading ? "生成中..." : "作成"}
-            </Button>
-
-            <Button
-              className="bg-gray-300 w-full"
-              variant="outline"
-              onClick={() => setShowAIModal(false)}
-            >
-              閉じる
-            </Button>
-          </div>
-        </div>
-      )}
-    </main>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setOpen(false)}
+              >
+                閉じる
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

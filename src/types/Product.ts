@@ -10,4 +10,5 @@ export type Product = {
   originalFileName?: string;
   taxIncluded?: boolean;
   order?: number; // ← 🔧この行を追加
+  currency?: string;
 };

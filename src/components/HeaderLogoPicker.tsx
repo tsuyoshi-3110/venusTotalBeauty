@@ -12,8 +12,8 @@ import {
 } from "firebase/storage";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
 
 export default function HeaderLogoPicker({
   onSelectFile,
@@ -74,6 +74,7 @@ export default function HeaderLogoPicker({
           sizes="100vw"
           className="object-cover"
           priority
+          unoptimized 
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-white text-sm font-semibold">

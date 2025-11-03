@@ -7,8 +7,8 @@ import { db } from "@/lib/firebase";
 import { getStorage, ref as storageRef, deleteObject } from "firebase/storage";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
 
 export default function ThemeWallpaper({
   onFileSelect,
@@ -58,6 +58,7 @@ export default function ThemeWallpaper({
           sizes="100vw"
           className="object-cover"
           priority
+          unoptimized 
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-white text-sm font-semibold">
@@ -74,6 +75,7 @@ export default function ThemeWallpaper({
         onChange={(e) => {
           if (e.target.files?.[0]) {
             onFileSelect(e.target.files[0]);
+            e.target.value = "";
           }
         }}
       />

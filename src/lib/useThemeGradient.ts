@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { onSnapshot, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { THEMES, ThemeKey } from "@/lib/themes";
-
-const SITE_KEY = "venusTotalBeaty";
+import { SITE_KEY } from "./atoms/siteKeyAtom";
 
 type ThemeValue = (typeof THEMES)[ThemeKey];
 

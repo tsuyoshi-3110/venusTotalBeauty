@@ -6,8 +6,8 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
 const docRef = doc(db, "sitePages", SITE_KEY, "pages", "topMessage");
 
 type Msg = { title: string; body: string };
@@ -62,10 +62,10 @@ export default function TopFixedText() {
         className="max-w-4xl mx-auto text-center space-y-4 px-4 mt-20"
         suppressHydrationWarning /* ★ 追加 point ① */
       >
-        <p className="text-3xl font-bold text-white whitespace-pre-wrap">
+        <p className="text-3xl font-bold text-white text-outline whitespace-pre-wrap">
           {msg.title || "\u00A0" /* ★ NBSP point ② */}
         </p>
-        <p className="text-2xl text-white whitespace-pre-wrap">
+        <p className="text-2xl text-white text-outline whitespace-pre-wrap">
           {msg.body || "\u00A0" /* ★ NBSP point ② */}
         </p>
       </div>

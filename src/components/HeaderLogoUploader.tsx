@@ -6,8 +6,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDoc, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db, storage } from "@/lib/firebase";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
 
 export default function HeaderLogoUploader() {
   const [file, setFile] = useState<File | null>(null);

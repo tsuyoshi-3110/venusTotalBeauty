@@ -1,95 +1,108 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// app/layout.tsx
 import "./globals.css";
-import Header from "@/components/Header";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Geist, Geist_Mono } from "next/font/google";
+import Header from "@/components/common/Header";
+import Footer from "@/components/common/Footer";
 import ThemeBackground from "@/components/ThemeBackground";
 import WallpaperBackground from "@/components/WallpaperBackground";
 import SubscriptionOverlay from "@/components/SubscriptionOverlay";
+import AnalyticsLogger from "@/components/AnalyticsLogger";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
+import { CartProvider } from "@/lib/cart/CartContext";
+import { seo, site, pageUrl, PUBLIC_ADDRESS } from "@/config/site";
+import {
+  kosugiMaru, notoSansJP, shipporiMincho, reggaeOne, yomogi, hachiMaruPop,
+} from "@/lib/font";
 
 const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-});
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
-export const metadata: Metadata = {
-  title: "Venus Total Beauty｜東淀川区淡路のネイルサロン",
-  description:
-    "大阪市東淀川区淡路にあるネイルサロン『Venus Total Beauty』。丁寧なケアと高品質な仕上がりが自慢です。",
-  openGraph: {
-    title: "Venus Total Beauty｜東淀川区淡路のネイルサロン",
-    description:
-      "丁寧なケアと高品質な仕上がりが自慢のネイルサロン。大阪市東淀川区淡路で営業中。",
-    url: "https://venusTotalBeaty-homepage.vercel.app/",
-    siteName: "Venus Total Beauty",
-    images: [
-      {
-        url: "/logo.png",
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: "ja_JP",
-    type: "website",
-  },
+export const metadata: Metadata = seo.base();
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const siteKey = "venusTotalBeaty";
+function toLD(obj: unknown) {
+  return JSON.stringify(obj).replace(/</g, "\\u003c");
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const BASE = site.baseUrl.replace(/\/$/, "");
+  const sameAs = Object.values(site.socials).filter(Boolean);
+  const mainImage = pageUrl(site.logoPath);
+
+  const ldGraph = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${BASE}#org`,
+        name: site.name,
+        url: site.baseUrl,
+        logo: mainImage,
+        image: [mainImage],
+        ...(site.tel ? { telephone: site.tel } : {}),
+        ...(sameAs.length ? { sameAs } : {}),
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${BASE}#website`,
+        name: site.name,
+        url: site.baseUrl,
+        publisher: { "@id": `${BASE}#org` },
+      },
+      {
+        "@type": "LocalBusiness",
+        "@id": `${BASE}#local`,
+        name: site.name,
+        url: site.baseUrl,
+        image: [mainImage],
+        ...(site.tel ? { telephone: site.tel } : {}),
+        address: PUBLIC_ADDRESS.postal,
+        hasMap: PUBLIC_ADDRESS.hasMap,
+        /** ★ここを追加 → 任意の価格帯（￥〜￥￥￥） */
+        priceRange: "￥￥",
+      },
+    ],
+  };
 
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={[
+        geistSans.variable, geistMono.variable,
+        kosugiMaru.variable, notoSansJP.variable,
+        yomogi.variable, hachiMaruPop.variable,
+        reggaeOne.variable, shipporiMincho.variable,
+        "antialiased",
+      ].join(" ")}
     >
       <head>
-        <link
-          rel="preload"
-          as="image"
-          href="/images/wallpaper/kamon.jpg"
-          type="image/webp"
-        />
-        <meta name="theme-color" content="#ffffff" />
-        <meta
-          name="google-site-verification"
-          content="UcH7-5B4bwpJxxSjIpBskahFhBRTSLRJUZ8A3LAnnFE"
-        />
-        <meta
-          name="google-site-verification"
-          content="h2O77asgMDfUmHBb7dda53OOJdsxv9GKXd5rrRgIQ-k"
+        <link rel="preload" as="image" href={site.logoPath} type="image/png" />
+        <Script
+          id="ld-graph"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: toLD(ldGraph) }}
         />
       </head>
 
-      <body className="relative min-h-screen">
-        <SubscriptionOverlay siteKey={siteKey} />
+      <body className="relative min-h-[100dvh] flex flex-col">
         <WallpaperBackground />
         <ThemeBackground />
-        <Header />
-        {children}
-
-        <Script
-          id="ld-json"
-          type="application/ld+json"
-          strategy="afterInteractive"
-        >
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BeautySalon",
-            name: "Venus Total Beauty",
-            address: {
-              "@type": "PostalAddress",
-              addressLocality: "大阪市東淀川区淡路",
-              streetAddress: "淡路4-18-13", // 実際の番地があれば修正してください
-            },
-            telephone: "06-1234-5678", // 実際の番号に変更してください
-            url: "https://venusTotalBeaty-homepage.vercel.app/",
-          })}
-        </Script>
+        <AnalyticsLogger />
+        <CartProvider>
+          <SubscriptionOverlay siteKey={SITE_KEY} />
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

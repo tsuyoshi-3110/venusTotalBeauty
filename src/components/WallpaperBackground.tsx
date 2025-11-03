@@ -12,9 +12,9 @@ export default function WallpaperBackground() {
 
   return (
     <div
-      aria-hidden
-      className="pointer-events-none fixed top-0 left-0 w-screen h-screen -z-20 bg-cover bg-center"
-      style={{ backgroundImage: `url(${url})` }}
-    />
+  aria-hidden
+  className="pointer-events-none fixed left-0 top-0 w-screen h-[100dvh] -z-20 bg-contain bg-center bg-no-repeat"
+  style={{ backgroundImage: `url(${url})` }}
+/>
   );
 }

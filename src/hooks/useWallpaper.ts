@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { onSnapshot, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
+
 const META_REF = doc(db, "siteSettingsEditable", SITE_KEY);
 
 export function useWallpaperUrl(): string {

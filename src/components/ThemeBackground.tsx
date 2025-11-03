@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { THEMES, ThemeKey } from "@/lib/themes";
+import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 
-const SITE_KEY = "venusTotalBeaty";
+
 const META_REF = doc(db, "siteSettingsEditable", SITE_KEY);
 
 function isThemeKey(value: unknown): value is ThemeKey {

@@ -1,8 +1,8 @@
 // src/lib/firebase-admin.ts
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
-// 初期化済みでなければ初期化
 if (getApps().length === 0) {
   initializeApp({
     credential: cert({
@@ -14,3 +14,4 @@ if (getApps().length === 0) {
 }
 
 export const adminDb = getFirestore();
+export const adminAuth = getAuth();
