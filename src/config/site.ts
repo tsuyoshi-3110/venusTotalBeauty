@@ -82,7 +82,7 @@ function createSite(overrides: SiteOverrides) {
     keywords: overrides.keywords as readonly string[],
     tel: overrides.tel ?? "",
     logoPath: overrides.logoPath ?? "/logo.png",
-    googleSiteVerification: overrides.googleSiteVerification ?? "",
+    googleSiteVerification: "c_QRPmJ75M0nJzwfqxd6Ziv5VB-BXk5-2OsDNAwtkZk",
     socials: {
       instagram: overrides.socials?.instagram ?? "",
       line: overrides.socials?.line ?? "",
@@ -195,8 +195,7 @@ export const copy = {
     heroTitle: `${site.name} ─ サロン情報`,
     heroAreas: "大阪市東淀川区・淡路",
     heroLead: "落ち着いた空間で丁寧に施術いたします。",
-    heroTail:
-      "アクセス・営業情報・お問い合わせは各ページをご覧ください。",
+    heroTail: "アクセス・営業情報・お問い合わせは各ページをご覧ください。",
     heroIntroLine: `${site.name}は大阪市東淀川区・淡路エリアにあるネイルサロンです。`,
   },
 
@@ -210,15 +209,27 @@ export const copy = {
     services: [
       {
         title: "ハンドジェル",
-        bullets: ["ワンカラー／グラデーション／フレンチ", "定番～トレンドデザイン", "オフ・ケア込みメニューあり"],
+        bullets: [
+          "ワンカラー／グラデーション／フレンチ",
+          "定番～トレンドデザイン",
+          "オフ・ケア込みメニューあり",
+        ],
       },
       {
         title: "フットジェル・ケア",
-        bullets: ["フットワンカラー／アート", "爪まわりのケア", "季節デザインのご提案"],
+        bullets: [
+          "フットワンカラー／アート",
+          "爪まわりのケア",
+          "季節デザインのご提案",
+        ],
       },
       {
         title: "オフ・ケア・リペア",
-        bullets: ["自店オフ／他店オフ", "甘皮ケア", "フィルイン・補強（メニューにより）"],
+        bullets: [
+          "自店オフ／他店オフ",
+          "甘皮ケア",
+          "フィルイン・補強（メニューにより）",
+        ],
       },
     ],
 
@@ -249,7 +260,8 @@ export const copy = {
 
     // お問い合わせブロック
     contactTitle: "ご予約・お問い合わせ",
-    contactText: "空き状況の確認・メニュー相談は、LINE／フォームからお気軽にどうぞ。",
+    contactText:
+      "空き状況の確認・メニュー相談は、LINE／フォームからお気軽にどうぞ。",
 
     // 下部ナビ
     toProductsText: "メニューを見る",
