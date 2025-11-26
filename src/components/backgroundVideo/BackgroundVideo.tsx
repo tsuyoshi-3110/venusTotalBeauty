@@ -15,7 +15,7 @@ import { ThemeKey } from "@/lib/themes";
 
 import { Button } from "@/components/ui/button";
 import imageCompression from "browser-image-compression";
-import BroomDustLoader from "../FeatherDusterLoader";
+import CardSpinner from "../CardSpinner";
 
 import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 import { RenderMedia } from "./RenderMedia";
@@ -428,32 +428,30 @@ export default function BackgroundMedia() {
     );
   };
 
-  const pendingButton =
-    status === "pending" &&
-    isAdmin && (
-      <Button
-        className="fixed bottom-4 right-4 z-50 bg-yellow-500 text-white shadow-lg"
-        onClick={async () => {
-          try {
-            const res = await fetch("/api/stripe/resume-subscription", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ siteKey: SITE_KEY }),
-            });
-            if (res.ok) {
-              alert("解約予約を取り消しました！");
-              location.reload();
-            } else {
-              alert("再開に失敗しました");
-            }
-          } catch {
+  const pendingButton = status === "pending" && isAdmin && (
+    <Button
+      className="fixed bottom-4 right-4 z-50 bg-yellow-500 text-white shadow-lg"
+      onClick={async () => {
+        try {
+          const res = await fetch("/api/stripe/resume-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ siteKey: SITE_KEY }),
+          });
+          if (res.ok) {
+            alert("解約予約を取り消しました！");
+            location.reload();
+          } else {
             alert("再開に失敗しました");
           }
-        }}
-      >
-        解約を取り消す
-      </Button>
-    );
+        } catch {
+          alert("再開に失敗しました");
+        }
+      }}
+    >
+      解約を取り消す
+    </Button>
+  );
 
   return (
     <div className="fixed inset-0 top-12">
@@ -470,11 +468,7 @@ export default function BackgroundMedia() {
 
       {loading && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-          <BroomDustLoader
-            label={`アップロード中… ${progress ?? 0}%`}
-            size={100}
-            speed={1}
-          />
+          <CardSpinner />
         </div>
       )}
 
