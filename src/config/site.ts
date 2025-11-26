@@ -117,7 +117,7 @@ const SITE_OVERRIDES: SiteOverrides = {
   ],
   tel: "",
   logoPath: "/ogpLogo.png",
-  googleSiteVerification: "",
+  googleSiteVerification: "c_QRPmJ75M0nJzwfqxd6Ziv5VB-BXk5-2OsDNAwtkZk",
   socials: {
     instagram: "",
     line: "",
