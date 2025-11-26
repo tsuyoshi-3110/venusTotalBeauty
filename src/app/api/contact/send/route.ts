@@ -1,3 +1,4 @@
+// src/app/api/contact/send/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { adminDb } from "@/lib/firebase-admin";
@@ -24,7 +25,6 @@ function encodeWordQ(str: string) {
   const buf = Buffer.from(str ?? "", "utf8");
   let out = "";
   for (const b of buf) {
-    // A-Z a-z 0-9 は素通し、スペースは'_'、その他は=HH
     if (
       (b >= 0x41 && b <= 0x5a) || // A-Z
       (b >= 0x61 && b <= 0x7a) || // a-z
@@ -105,10 +105,43 @@ ${JSON.stringify({ title: "", body })}
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, message, website, siteKey } = await req.json();
+    let name = "";
+    let email = "";
+    let message = "";
+    let website: string | undefined;
+    let siteKey: string | undefined;
+
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      // ==== フロントからの FormData(multipart) 用 ====
+      const formData = await req.formData();
+      name = String(formData.get("name") ?? "");
+      email = String(formData.get("email") ?? "");
+      message = String(formData.get("message") ?? "");
+      const websiteRaw = formData.get("website");
+      const siteKeyRaw = formData.get("siteKey");
+
+      website = websiteRaw ? String(websiteRaw) : undefined;
+      siteKey = siteKeyRaw ? String(siteKeyRaw) : undefined;
+
+      // 添付ファイル（今はメールに添付せず、受け取るだけ）
+      // const files = formData.getAll("files"); // FormDataEntryValue = string | File
+      // 必要になったらここで Gmail 用 MIME を組み立てれば OK
+    } else {
+      // ==== JSON 用（他のクライアントからのアクセスも許容）====
+      const body = await req.json();
+      name = body.name ?? "";
+      email = body.email ?? "";
+      message = body.message ?? "";
+      website = body.website ?? undefined;
+      siteKey = body.siteKey ?? undefined;
+    }
 
     // 蜜鉢チェック
-    if (website) return NextResponse.json({ ok: true });
+    if (website) {
+      return NextResponse.json({ ok: true });
+    }
 
     if (!email || !message) {
       return NextResponse.json(
@@ -154,7 +187,7 @@ export async function POST(req: NextRequest) {
     const fromName = encodeWordQ("お問い合わせ");
     const replyName = name ? encodeWordQ(name) : null;
 
-    // 本文は base64 で送る（マルチバイトの安全性向上）
+    // 本文は base64 で送る
     const bodyB64 = Buffer.from(plain, "utf8").toString("base64");
 
     const raw = [

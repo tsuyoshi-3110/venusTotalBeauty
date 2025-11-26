@@ -70,8 +70,7 @@ const STRINGS: Record<string, Strings> = {
       message: "お問い合わせ内容は必須です",
     },
     attachLabel: "ファイル添付（写真・PDF）",
-    attachHelp:
-      "最大5件、各10MBまで。対応形式：JPEG / PNG / WebP / GIF / PDF",
+    attachHelp: "最大5件、各10MBまで。対応形式：JPEG / PNG / WebP / GIF / PDF",
     fileRemove: "削除",
     fileTooMany: "添付できるのは最大5件までです。",
     fileTooBig: "ファイルサイズが大きすぎます（各10MBまで）。",
@@ -416,12 +415,18 @@ export default function MinimalInquiryForm() {
   // 添付系テキストはフォールバック
   const t = {
     ...tRaw,
-    attachLabel: tRaw.attachLabel ?? STRINGS.ja.attachLabel ?? STRINGS.en.attachLabel!,
-    attachHelp: tRaw.attachHelp ?? STRINGS.ja.attachHelp ?? STRINGS.en.attachHelp!,
-    fileRemove: tRaw.fileRemove ?? STRINGS.ja.fileRemove ?? STRINGS.en.fileRemove!,
-    fileTooMany: tRaw.fileTooMany ?? STRINGS.ja.fileTooMany ?? STRINGS.en.fileTooMany!,
-    fileTooBig: tRaw.fileTooBig ?? STRINGS.ja.fileTooBig ?? STRINGS.en.fileTooBig!,
-    fileTypeErr: tRaw.fileTypeErr ?? STRINGS.ja.fileTypeErr ?? STRINGS.en.fileTypeErr!,
+    attachLabel:
+      tRaw.attachLabel ?? STRINGS.ja.attachLabel ?? STRINGS.en.attachLabel!,
+    attachHelp:
+      tRaw.attachHelp ?? STRINGS.ja.attachHelp ?? STRINGS.en.attachHelp!,
+    fileRemove:
+      tRaw.fileRemove ?? STRINGS.ja.fileRemove ?? STRINGS.en.fileRemove!,
+    fileTooMany:
+      tRaw.fileTooMany ?? STRINGS.ja.fileTooMany ?? STRINGS.en.fileTooMany!,
+    fileTooBig:
+      tRaw.fileTooBig ?? STRINGS.ja.fileTooBig ?? STRINGS.en.fileTooBig!,
+    fileTypeErr:
+      tRaw.fileTypeErr ?? STRINGS.ja.fileTypeErr ?? STRINGS.en.fileTypeErr!,
   };
 
   // バリデーション
@@ -480,12 +485,6 @@ export default function MinimalInquiryForm() {
     setErrorMsg(null);
     setDone(null);
     try {
-      if (v.website) {
-        // 蜜鉢が埋まってたら成功扱い
-        setDone("OK");
-        return;
-      }
-
       // 常に FormData で送信（multipart）
       const fd = new FormData();
       fd.append("name", v.name);
@@ -516,26 +515,26 @@ export default function MinimalInquiryForm() {
     }
   };
 
-  // スタイル
-  const outerText = isDark ? "text-white" : "text-black";
+  // スタイル（このフォームは常に白背景＋黒文字で固定）
+  const outerText = "text-black";
   const labelClass = clsx("text-sm font-medium", outerText);
-  const helpClass = clsx(
-    "mt-1 text-xs",
-    isDark ? "text-white/70" : "text-black/70"
-  );
+  const helpClass = "mt-1 text-xs text-black/70";
+
+  // 各フィールドの見た目
   const fieldClass = clsx(
-    "block w-full min-w-0 max-w-full bg-transparent",
-    isDark
-      ? "!text-white placeholder:text-white/70 placeholder:opacity-100 border-white/40 focus-visible:ring-1 focus-visible:ring-white/60"
-      : "!text-black placeholder:text-black/50 placeholder:opacity-100 border-black/30 focus-visible:ring-1 focus-visible:ring-black/40"
+    "block w-full min-w-0 max-w-full",
+    "bg-white/50 text-black",
+    "placeholder:text-black/50 placeholder:opacity-100",
+    "border border-black/30",
+    "focus-visible:ring-1 focus-visible:ring-black/40"
   );
-  const cardClass = clsx(
-    "rounded-2xl border shadow-sm backdrop-blur-md",
-    isDark
-      ? " border-white/20 text-white"
-      : "bg-white/10 border-black/10 text-black"
-  );
-  const headerBorder = isDark ? "border-white/15" : "border-black/10";
+
+  // カード全体の見た目（フォームの背景）
+  const cardClass =
+    "rounded-2xl border shadow-sm backdrop-blur-md bg-white/50 border-black/10 text-black";
+
+  // ヘッダー下のボーダー
+  const headerBorder = "border-black/10";
 
   return (
     <div className={clsx("space-y-4", outerText)}>
@@ -552,7 +551,12 @@ export default function MinimalInquiryForm() {
       </div>
 
       <div className={cardClass}>
-        <div className={clsx("px-5 pt-5 pb-3 border-b rounded-t-2xl", headerBorder)}>
+        <div
+          className={clsx(
+            "px-5 pt-5 pb-3 border-b rounded-t-2xl",
+            headerBorder
+          )}
+        >
           <h2 className="text-base font-semibold">{t.title}</h2>
           <p className={helpClass}>{t.help}</p>
         </div>
