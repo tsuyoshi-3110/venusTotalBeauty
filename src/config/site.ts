@@ -81,7 +81,7 @@ function createSite(overrides: SiteOverrides) {
     description: overrides.description,
     keywords: overrides.keywords as readonly string[],
     tel: overrides.tel ?? "",
-    logoPath: overrides.logoPath ?? "/logo.png",
+    logoPath: overrides.logoPath ?? "/ogpLogo.png",
     googleSiteVerification: "c_QRPmJ75M0nJzwfqxd6Ziv5VB-BXk5-2OsDNAwtkZk",
     socials: {
       instagram: overrides.socials?.instagram ?? "",
@@ -116,7 +116,7 @@ const SITE_OVERRIDES: SiteOverrides = {
     "グラデーション",
   ],
   tel: "",
-  logoPath: "/logo.png",
+  logoPath: "/ogpLogo.png",
   googleSiteVerification: "",
   socials: {
     instagram: "",
@@ -505,14 +505,14 @@ const PAGES = {
     title: `メニュー・料金｜${site.name}`,
     description: `${site.name}のメニュー・料金一覧。ハンド／フット、ワンカラー、グラデ、フレンチ、オフ・ケアなど。`,
     ogType: "website",
-    ogImage: "/logo.png",
+    ogImage: "/ogpLogo.png",
   },
   productsEC: {
     path: "/products-ec",
-    title: `オンライン予約｜${site.name}`,
-    description: `${site.name}のオンライン予約ページ。空き状況のご確認・ご予約はこちらから。`,
+    title: `オンラインショップ｜${site.name}`,
+    description: `${site.name}のオンラインショップ`,
     ogType: "website",
-    ogImage: "/logo.png",
+    ogImage: "/ogpLogo.png",
   },
   projects: {
     path: "/projects",
