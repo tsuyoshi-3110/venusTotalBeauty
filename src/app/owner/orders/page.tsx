@@ -1,4 +1,6 @@
 // src/app/owner/orders/page.tsx
+import { hasCurrentOwnerSession } from "@/lib/auth/page-owner";
+import OwnerSessionGate from "@/components/OwnerSessionGate";
 import { adminDb } from "@/lib/firebase-admin";
 import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 import Pager from "./Pager";
@@ -78,6 +80,8 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{ p?: string }>;
 }) {
+  if (!(await hasCurrentOwnerSession())) return <OwnerSessionGate />;
+
   const sp = await searchParams; // ← エラー修正ポイント
   const page = Math.max(1, Number(sp?.p ?? "1"));
   const startIndex = (page - 1) * PAGE_SIZE;

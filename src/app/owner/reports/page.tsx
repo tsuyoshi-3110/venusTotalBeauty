@@ -1,3 +1,5 @@
+import { hasCurrentOwnerSession } from "@/lib/auth/page-owner";
+import OwnerSessionGate from "@/components/OwnerSessionGate";
 import { adminDb } from "@/lib/firebase-admin";
 import { SITE_KEY } from "@/lib/atoms/siteKeyAtom";
 import SalesLine from "./SalesLine";
@@ -113,6 +115,8 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  if (!(await hasCurrentOwnerSession())) return <OwnerSessionGate />;
+
   const sp = await searchParams;
   const { fromJ, toJ } = parseRange(sp.from, sp.to);
 
