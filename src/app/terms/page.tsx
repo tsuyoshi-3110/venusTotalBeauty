@@ -1165,7 +1165,7 @@ export default function TermsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const ref = doc(db, "siteSettings", SITE_KEY);
+        const ref = doc(db, "sitePublicProfile", SITE_KEY);
         const snap = await getDoc(ref);
         setS((snap.data() as SiteSettings) ?? {});
       } finally {

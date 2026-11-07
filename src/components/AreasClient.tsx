@@ -105,7 +105,8 @@ export default function AreasClient() {
         const pub = await getDoc(PUBLIC_REF);
         const ownerId = pub.exists() ? (pub.data() as any)?.ownerId : undefined;
         setIsOwner(!!ownerId && ownerId === u.uid);
-      } finally {
+      } catch {
+        setIsOwner(false);
       }
     });
     return () => unsub();

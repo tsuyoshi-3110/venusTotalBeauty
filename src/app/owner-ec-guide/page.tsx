@@ -109,9 +109,9 @@ export default function OwnerECGuidePage() {
     let alive = true;
     (async () => {
       try {
-        // 事業者情報（siteSettings/{SITE_KEY}）
+        // 事業者情報（sitePublicProfile/{SITE_KEY}）
         try {
-          const settingsSnap = await getDoc(doc(db, "siteSettings", SITE_KEY));
+          const settingsSnap = await getDoc(doc(db, "sitePublicProfile", SITE_KEY));
           if (!alive) return;
           setS((settingsSnap.data() as any) ?? {});
         } catch {}

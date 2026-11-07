@@ -696,7 +696,7 @@ export default function PrivacyPage() {
 
   useEffect(() => {
     (async () => {
-      const snap = await getDoc(doc(db, "siteSettings", SITE_KEY));
+      const snap = await getDoc(doc(db, "sitePublicProfile", SITE_KEY));
       const d = (snap.data() as any) || {};
       setS({
         siteName: d?.siteName ?? "",

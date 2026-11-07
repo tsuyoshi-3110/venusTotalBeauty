@@ -1,8 +1,7 @@
+import { adminDb } from "@/lib/firebase-admin";
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { google } from "googleapis";
-import { db } from "@/lib/firebase"; // Firestore インスタンスを正しくインポート
-import { doc, getDoc } from "firebase/firestore";
 
 const {
   GOOGLE_CLIENT_ID,
@@ -25,17 +24,16 @@ export async function POST(req: NextRequest) {
 
   try {
     // ① Firestore から ownerEmail を取得
-    const docRef = doc(db, "siteSettings", siteKey);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await adminDb.doc(`siteSettings/${siteKey}`).get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       return NextResponse.json(
         { error: "対象のサイト設定が見つかりませんでした" },
         { status: 404 }
       );
     }
 
-    const ownerEmail = docSnap.data().ownerEmail;
+    const ownerEmail = docSnap.data()?.ownerEmail;
     if (!ownerEmail) {
       return NextResponse.json(
         { error: "送信先メールアドレスが設定されていません" },

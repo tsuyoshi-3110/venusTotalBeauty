@@ -192,9 +192,9 @@ export default function BusinessCardPage() {
       (e) => console.warn("siteSettingsEditable read error:", e)
     );
     const unsubBase = onSnapshot(
-      doc(db, "siteSettings", SITE_KEY),
+      doc(db, "sitePublicProfile", SITE_KEY),
       (s) => setBase(s.exists() ? (s.data() as SiteDoc) : null),
-      (e) => console.warn("siteSettings read error:", e)
+      (e) => console.warn("sitePublicProfile read error:", e)
     );
     const unsubStores = onSnapshot(
       collection(db, "siteStores", SITE_KEY, "items"),

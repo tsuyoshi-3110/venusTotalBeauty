@@ -41,7 +41,7 @@ export default function TokuShohoPage() {
     (async () => {
       try {
         // オーナー情報
-        const settingsRef = doc(db, "siteSettings", SITE_KEY);
+        const settingsRef = doc(db, "sitePublicProfile", SITE_KEY);
         const settingsSnap = await getDoc(settingsRef);
         const d = (settingsSnap.data() as any) || {};
         setS({
