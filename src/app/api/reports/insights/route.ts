@@ -200,7 +200,7 @@ async function buildAIGeneratedInsights(input: InsightInput): Promise<InsightAI 
     "以下は売上レポートの要約データです。オーナーが今日から実行できる販促提案をください。数値はJPY。\n" +
     "JSON:" + JSON.stringify(input);
 
-  const model = "gpt-4";
+  const model = "gpt-5.4";
   const res = await client.chat.completions.create({
     model,
     messages: [
