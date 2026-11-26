@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const MODEL = process.env.OPENAI_MODEL ?? "gpt-5-chat-latest";
+const MODEL = process.env.OPENAI_MODEL ?? "gpt-5.4";
 
 export async function GET() {
   // 疎通確認用: /api/ai/generate-company

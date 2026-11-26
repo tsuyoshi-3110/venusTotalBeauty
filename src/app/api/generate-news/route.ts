@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   )}」をもとに、店舗のお知らせとしてふさわしい文章（100〜200文字、日本語）を丁寧かつ親しみやすく作成してください。`;
 
   const chat = await openai.chat.completions.create({
-    model: "gpt-5-chat-latest",
+    model: "gpt-5.4",
     messages: [
       {
         role: "system",
